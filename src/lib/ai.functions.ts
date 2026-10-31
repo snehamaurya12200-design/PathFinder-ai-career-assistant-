@@ -134,7 +134,6 @@ const CareerAgentInput = z.object({
   userState: z
     .object({
       name: z.string().optional(),
-      email: z.string().optional(),
       education: z.string().optional(),
       educationLevel: z.string().optional(),
       stream: z.string().optional(),
@@ -156,8 +155,8 @@ export const askCareerAgent = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<AgentResponse> => {
     try {
       const ai = getAI();
-      const userName = data.userState?.name ?? "Sneha Maurya";
-      const userEducation = data.userState?.education ?? "B.Tech Computer Science (2021-2025)";
+      const userName = data.userState?.name ?? "the learner";
+      const userEducation = data.userState?.education ?? "Not provided";
       const userEducationLevel = data.userState?.educationLevel ?? "Undergraduate";
       const userStream = data.userState?.stream ?? "Computer Science & IT";
       const userHeadline =
@@ -179,7 +178,7 @@ USER PROFILE IN CONTEXT:
 - Current Skills & Ratings: ${currentSkills}
 - Currently Enrolled Courses: ${enrolled}
 - Uploaded CV: ${data.userState?.cvName ?? "None yet"}
-- Completed Lessons: ${data.userState?.lessonsDone ?? 46}
+- Completed Lessons: ${data.userState?.lessonsDone ?? 0}
 - Practice Tests Taken: ${JSON.stringify(data.userState?.recentTests ?? [])}
 - Mock Interviews Taken: ${JSON.stringify(data.userState?.recentInterviews ?? [])}
 
@@ -192,8 +191,11 @@ MULTI-DISCIPLINARY INTELLIGENCE & ADAPTATION:
   * If in Law or Civil Services, advise on constitutional law, Indian polity, public administration, and GS answer writing.
   * If in Tech / Engineering, provide state-of-the-art software architecture, coding patterns, and system design.
 - Provide concrete, detailed responses rather than generic placeholders.
+- Never mention, request, repeat, or infer private contact details such as email addresses, phone numbers, or account identifiers. The assistant does not receive them.
+- Act as an execution-oriented assistant, not only a conversational chatbot: turn requests into useful deliverables and platform actions when appropriate.
+- If the user asks for course material, teach the topic directly in the reply. Include a short explanation, learning objectives, structured notes, examples, a practice exercise with an answer or solution outline, and a suggested next lesson. Do not merely recommend a course or say to visit another page.
 - If asked for a learning roadmap, craft a week-by-week curriculum with realistic deliverables and include a "GENERATE_ROADMAP" action.
-- When recommending courses, reference PATHFINDER's catalogue (NPTEL, SWAYAM, MIT OCW, Khan Academy, Coursera, Harvard Online, etc.).
+- When recommending courses, reference PATHFINDER's catalogue (NPTEL, SWAYAM, MIT OCW, Khan Academy, Coursera, Harvard Online, etc.) while still providing immediate self-contained learning material.
 
 STRUCTURED AGENT ACTIONS:
 When appropriate, trigger real platform actions that update the user's dashboard and profile:
@@ -222,7 +224,7 @@ Output MUST be strict JSON with this exact structure:
         for (const item of data.history) {
           contents.push({
             role: item.role === "user" ? "user" : "model",
-            parts: [{ text: item.content }],
+            parts: [{ text: item.content.replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[private email removed]") }],
           });
         }
       }

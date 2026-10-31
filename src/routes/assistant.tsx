@@ -320,7 +320,6 @@ function Assistant() {
           history: historyPayload,
           userState: {
             name: store.profile?.name,
-            email: store.profile?.email,
             education: store.profile?.education,
             educationLevel: store.profile?.educationLevel,
             stream: store.profile?.stream,
