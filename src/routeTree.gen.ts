@@ -15,6 +15,7 @@ import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as JobsRouteImport } from './routes/jobs'
 import { Route as LearningRouteImport } from './routes/learning'
 import { Route as NetworkingRouteImport } from './routes/networking'
+import { Route as QuestRouteImport } from './routes/quest'
 import { Route as RoadmapRouteImport } from './routes/roadmap'
 import { Route as SkillsRouteImport } from './routes/skills'
 
@@ -48,6 +49,11 @@ const NetworkingRoute = NetworkingRouteImport.update({
   path: '/networking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuestRoute = QuestRouteImport.update({
+  id: '/quest',
+  path: '/quest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoadmapRoute = RoadmapRouteImport.update({
   id: '/roadmap',
   path: '/roadmap',
@@ -66,6 +72,7 @@ export interface FileRoutesByFullPath {
   '/jobs': typeof JobsRoute
   '/learning': typeof LearningRoute
   '/networking': typeof NetworkingRoute
+  '/quest': typeof QuestRoute
   '/roadmap': typeof RoadmapRoute
   '/skills': typeof SkillsRoute
 }
@@ -76,6 +83,7 @@ export interface FileRoutesByTo {
   '/jobs': typeof JobsRoute
   '/learning': typeof LearningRoute
   '/networking': typeof NetworkingRoute
+  '/quest': typeof QuestRoute
   '/roadmap': typeof RoadmapRoute
   '/skills': typeof SkillsRoute
 }
@@ -87,6 +95,7 @@ export interface FileRoutesById {
   '/jobs': typeof JobsRoute
   '/learning': typeof LearningRoute
   '/networking': typeof NetworkingRoute
+  '/quest': typeof QuestRoute
   '/roadmap': typeof RoadmapRoute
   '/skills': typeof SkillsRoute
 }
@@ -99,6 +108,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/learning'
     | '/networking'
+    | '/quest'
     | '/roadmap'
     | '/skills'
   fileRoutesByTo: FileRoutesByTo
@@ -109,6 +119,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/learning'
     | '/networking'
+    | '/quest'
     | '/roadmap'
     | '/skills'
   id:
@@ -119,6 +130,7 @@ export interface FileRouteTypes {
     | '/jobs'
     | '/learning'
     | '/networking'
+    | '/quest'
     | '/roadmap'
     | '/skills'
   fileRoutesById: FileRoutesById
@@ -130,6 +142,7 @@ export interface RootRouteChildren {
   JobsRoute: typeof JobsRoute
   LearningRoute: typeof LearningRoute
   NetworkingRoute: typeof NetworkingRoute
+  QuestRoute: typeof QuestRoute
   RoadmapRoute: typeof RoadmapRoute
   SkillsRoute: typeof SkillsRoute
 }
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NetworkingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quest': {
+      id: '/quest'
+      path: '/quest'
+      fullPath: '/quest'
+      preLoaderRoute: typeof QuestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/roadmap': {
       id: '/roadmap'
       path: '/roadmap'
@@ -202,6 +222,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobsRoute: JobsRoute,
   LearningRoute: LearningRoute,
   NetworkingRoute: NetworkingRoute,
+  QuestRoute: QuestRoute,
   RoadmapRoute: RoadmapRoute,
   SkillsRoute: SkillsRoute,
 }

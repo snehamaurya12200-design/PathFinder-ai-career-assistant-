@@ -11,6 +11,11 @@ import {
   Loader2,
   Check,
   RotateCcw,
+  BrainCircuit,
+  Target,
+  TrendingUp,
+  ClipboardCheck,
+  WandSparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -93,6 +98,13 @@ function Assistant() {
 
   const [activeChips, setActiveChips] = useState<string[]>(defaultChips);
   const [lastActionNotice, setLastActionNotice] = useState<string | null>(null);
+  const [focusMode, setFocusMode] = useState<"coach" | "interview" | "roadmap">("coach");
+
+  const focusModes = [
+    { id: "coach" as const, label: "Career coach", icon: BrainCircuit },
+    { id: "interview" as const, label: "Interview lab", icon: ClipboardCheck },
+    { id: "roadmap" as const, label: "Roadmap builder", icon: Target },
+  ];
 
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -281,6 +293,13 @@ function Assistant() {
     setText("");
     setLastActionNotice(null);
 
+    const modeContext =
+      focusMode === "interview"
+        ? "Respond as an interview coach: ask one focused follow-up when useful and give scoring criteria."
+        : focusMode === "roadmap"
+          ? "Respond as a roadmap architect: turn advice into sequenced milestones with clear deliverables."
+          : "Respond as a pragmatic career coach: prioritize the highest-impact next step for this profile.";
+    const enrichedQuery = `${modeContext}\n\nUser request: ${q}`;
     const userMsg: ChatMsg = { me: true, t: q };
     actions.addChatMessage(userMsg);
     setProcessing(true);
@@ -297,7 +316,7 @@ function Assistant() {
 
       const res = await askCareerAgent({
         data: {
-          message: q,
+          message: enrichedQuery,
           history: historyPayload,
           userState: {
             name: store.profile?.name,
@@ -529,6 +548,40 @@ function Assistant() {
               <span>{autoSpeak ? "Voice On" : "Voice Off"}</span>
             </button>
           </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-2 rounded-2xl border bg-background/60 p-1.5">
+          {focusModes.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setFocusMode(id)}
+              className={`flex items-center justify-center gap-1.5 rounded-xl px-2 py-2 text-xs font-medium transition ${
+                focusMode === id
+                  ? "bg-ink text-ink-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-2">
+          {[
+            { label: "Target", value: store.goal, icon: Target },
+            { label: "Skill signals", value: `${Object.keys(store.skills).length} tracked`, icon: TrendingUp },
+            { label: "Next best step", value: focusMode === "interview" ? "Practice" : focusMode === "roadmap" ? "Plan" : "Discover", icon: WandSparkles },
+          ].map(({ label, value, icon: Icon }) => (
+            <div key={label} className="rounded-xl bg-muted/50 px-2.5 py-2">
+              <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide text-muted-foreground">
+                <Icon className="h-3 w-3" />
+                {label}
+              </div>
+              <p className="mt-1 truncate text-xs font-semibold">{value}</p>
+            </div>
+          ))}
         </div>
 
         <div className="mt-4 flex flex-wrap gap-2">
