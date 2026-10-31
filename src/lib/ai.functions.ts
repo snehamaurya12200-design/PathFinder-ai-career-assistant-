@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { GoogleGenAI } from "@google/genai";
+import { generateText, gateway } from "ai";
 import { z } from "zod";
 import {
   FALLBACK_ADAPTIVE_QUESTIONS,
@@ -8,19 +8,42 @@ import {
   type QuestContext,
 } from "./career-quest-data";
 
-function getAI() {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not configured.");
-  }
-  return new GoogleGenAI({
-    apiKey,
-    httpOptions: {
-      headers: {
-        "User-Agent": "aistudio-build",
+type GatewayAI = {
+  models: {
+    generateContent: (input: {
+      model: string;
+      contents: unknown;
+      config?: { systemInstruction?: string; responseMimeType?: string; temperature?: number };
+    }) => Promise<{ text: string; candidates: Array<{ content: { parts: Array<{ text: string }> } }> }>;
+  };
+};
+
+function getAI(): GatewayAI {
+  return {
+    models: {
+      async generateContent({ model, contents, config }) {
+        const prompt = Array.isArray(contents)
+          ? contents
+              .map((turn: any) => `${turn.role === "model" ? "Assistant" : "User"}: ${turn.parts?.map((part: any) => part.text ?? "").join(" ") ?? ""}`)
+              .join("\n\n")
+          : typeof contents === "string"
+            ? contents
+            : JSON.stringify(contents);
+        const result = await generateText({
+          model: gateway(model),
+          system: config?.systemInstruction,
+          prompt: config?.responseMimeType === "application/json"
+            ? `${prompt}\n\nReturn only valid JSON. Do not wrap it in markdown fences.`
+            : prompt,
+          temperature: config?.temperature,
+        });
+        return {
+          text: result.text,
+          candidates: [{ content: { parts: [{ text: result.text }] } }],
+        };
       },
     },
-  });
+  };
 }
 
 /**
@@ -29,11 +52,11 @@ function getAI() {
  * if a 503 (high demand) or 429 (rate-limit) or 404 (unavailable) occurs.
  */
 async function callGeminiWithFallback(
-  ai: GoogleGenAI,
+  ai: GatewayAI,
   models: string[],
   params: {
-    contents: Parameters<GoogleGenAI["models"]["generateContent"]>[0]["contents"];
-    config?: Parameters<GoogleGenAI["models"]["generateContent"]>[0]["config"];
+    contents: unknown;
+    config?: { systemInstruction?: string; responseMimeType?: string; temperature?: number };
   },
 ) {
   let lastError: unknown = null;
@@ -57,10 +80,10 @@ async function callGeminiWithFallback(
 }
 
 const TEXT_MODELS = [
-  "gemini-3.8-flash",
-  "gemini-3.5-flash-lite",
-  "gemini-flash-lite-latest",
-  "gemini-flash-latest",
+  "google/gemini-3.8-flash",
+  "google/gemini-3.7-flash",
+  "google/gemini-3.6-flash",
+  "google/gemini-3.5-flash",
 ];
 
 /* ------------------- Legacy Ask AI (Gemini Powered) ------------------- */
